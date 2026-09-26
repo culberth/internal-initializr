@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+      annotations:
+        # The menu is read once at startup, so a menu change has to roll the pod.
+        checksum/menu: {{ .Files.Get "files/initializr-menu.yml" | sha256sum }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: initializr
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # Loads /config/application.yml (the menu) on top of the classpath one.
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: "file:/config/"
+            # Read by the patch's MavenWrapperRepositoryContributor as
+            # internal.maven-wrapper.repository-url.
+            - name: INTERNAL_MAVEN_WRAPPER_REPOSITORY_URL
+              value: {{ .Values.nexus.mavenRepositoryUrl | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          # Upstream exposes health and info. Startup is slow-ish (large metadata, ehcache), hence
+          # the generous startup budget: 40 x 3s.
+          startupProbe:
+            httpGet: &probe
+              path: /actuator/health
+              port: http
+            periodSeconds: 3
+            failureThreshold: 40
+          readinessProbe:
+            httpGet: *probe
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: *probe
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: menu
+              mountPath: /config
+              readOnly: true
+            # Projects are generated into java.io.tmpdir before zipping; Tomcat also needs it.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: menu
+          configMap:
+            name: {{ .Release.Name }}-menu
+        - name: tmp
+          emptyDir: {}

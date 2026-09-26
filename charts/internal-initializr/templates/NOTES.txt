@@ -1,0 +1,10 @@
+internal-initializr is starting in namespace {{ .Release.Namespace }}.
+
+Browser:  http://{{ .Values.ingress.host }}
+          (hosts file: 127.0.0.1 {{ .Values.ingress.host }})
+CLI:      spring init --target http://{{ .Values.ingress.host }} --dependencies=web demo
+IDEs:     set the Spring Initializr server URL to http://{{ .Values.ingress.host }}
+
+Generated wrappers download Maven from: {{ .Values.nexus.mavenRepositoryUrl | default "Maven Central (nexus.mavenRepositoryUrl is empty)" }}
+
+Check it end to end:  ./scripts/verify-generated-projects.ps1

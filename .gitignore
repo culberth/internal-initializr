@@ -1,3 +1,29 @@
+# Upstream clones, recreated by scripts/build-image.ps1 from upstream.lock
+upstream/
+
+# Build output: the jar handed to docker build, and verify-generated-projects.ps1's scratch
+build/
+
+# Claude Code. The memory file is committed on purpose; only machine-local settings are ignored.
+.claude/settings.local.json
+
+# Helm packaging output
+*.tgz
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Maven (from the GitHub repo template)
 target/
 pom.xml.tag
 pom.xml.releaseBackup

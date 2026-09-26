@@ -1,0 +1,10 @@
+# Upstream sources this project builds, pinned. scripts/build-image.ps1 clones them into
+# upstream/ (gitignored) and checks out exactly these commits.
+#
+# start.spring.io depends on a SNAPSHOT of the initializr library (spring-initializr.version
+# in its pom), so the two commits must move together: bump both, rebuild, and re-copy the
+# dependency entries in charts/internal-initializr/files/initializr-menu.yml.
+START_SPRING_IO_REPO=https://github.com/spring-io/start.spring.io.git
+START_SPRING_IO_COMMIT=29903a3fd5ccdb6f8623111871ab2a9b804cb160
+INITIALIZR_REPO=https://github.com/spring-io/initializr.git
+INITIALIZR_COMMIT=d445a056ced904ba5098df1e75b75bebf9840687

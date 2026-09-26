@@ -1,0 +1,189 @@
+From 8b5cc14f666630bfa0ee573d224a703f11c2c6ab Mon Sep 17 00:00:00 2001
+From: Bo <culberth@gmail.com>
+Date: Sat, 26 Sep 2026 14:04:25 -0700
+Subject: [PATCH] Point generated Maven wrapper at an internal repository
+
+---
+ ...WrapperProjectGenerationConfiguration.java | 44 +++++++++++
+ .../MavenWrapperRepositoryContributor.java    | 79 +++++++++++++++++++
+ .../site/extension/internal/package-info.java | 20 +++++
+ .../main/resources/META-INF/spring.factories  |  1 +
+ 4 files changed, 144 insertions(+)
+ create mode 100644 start-site/src/main/java/io/spring/start/site/extension/internal/InternalMavenWrapperProjectGenerationConfiguration.java
+ create mode 100644 start-site/src/main/java/io/spring/start/site/extension/internal/MavenWrapperRepositoryContributor.java
+ create mode 100644 start-site/src/main/java/io/spring/start/site/extension/internal/package-info.java
+
+diff --git a/start-site/src/main/java/io/spring/start/site/extension/internal/InternalMavenWrapperProjectGenerationConfiguration.java b/start-site/src/main/java/io/spring/start/site/extension/internal/InternalMavenWrapperProjectGenerationConfiguration.java
+new file mode 100644
+index 00000000..234fe1a6
+--- /dev/null
++++ b/start-site/src/main/java/io/spring/start/site/extension/internal/InternalMavenWrapperProjectGenerationConfiguration.java
+@@ -0,0 +1,44 @@
++/*
++ * Copyright 2012 - present the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package io.spring.start.site.extension.internal;
++
++import io.spring.initializr.generator.buildsystem.maven.MavenBuildSystem;
++import io.spring.initializr.generator.condition.ConditionalOnBuildSystem;
++import io.spring.initializr.generator.project.ProjectGenerationConfiguration;
++
++import org.springframework.context.annotation.Bean;
++import org.springframework.core.env.Environment;
++
++/**
++ * {@link ProjectGenerationConfiguration} that points the generated Maven wrapper at an
++ * internal repository instead of Maven Central, when
++ * {@code internal.maven-wrapper.repository-url} is set.
++ *
++ * @author Bo
++ */
++@ProjectGenerationConfiguration
++@ConditionalOnBuildSystem(MavenBuildSystem.ID)
++class InternalMavenWrapperProjectGenerationConfiguration {
++
++	static final String REPOSITORY_URL_PROPERTY = "internal.maven-wrapper.repository-url";
++
++	@Bean
++	MavenWrapperRepositoryContributor internalMavenWrapperRepositoryContributor(Environment environment) {
++		return new MavenWrapperRepositoryContributor(environment.getProperty(REPOSITORY_URL_PROPERTY));
++	}
++
++}
+diff --git a/start-site/src/main/java/io/spring/start/site/extension/internal/MavenWrapperRepositoryContributor.java b/start-site/src/main/java/io/spring/start/site/extension/internal/MavenWrapperRepositoryContributor.java
+new file mode 100644
+index 00000000..5ea730cc
+--- /dev/null
++++ b/start-site/src/main/java/io/spring/start/site/extension/internal/MavenWrapperRepositoryContributor.java
+@@ -0,0 +1,79 @@
++/*
++ * Copyright 2012 - present the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package io.spring.start.site.extension.internal;
++
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.List;
++
++import io.spring.initializr.generator.project.contributor.ProjectContributor;
++
++import org.springframework.core.Ordered;
++import org.springframework.util.StringUtils;
++
++/**
++ * Rewrites the {@code distributionUrl} of the generated Maven wrapper so that it downloads
++ * Maven from an internal repository. Runs after the wrapper has been written, and keeps
++ * the Maven version the wrapper template chose.
++ *
++ * @author Bo
++ */
++class MavenWrapperRepositoryContributor implements ProjectContributor {
++
++	static final String CENTRAL = "https://repo.maven.apache.org/maven2";
++
++	private static final String WRAPPER_PROPERTIES = ".mvn/wrapper/maven-wrapper.properties";
++
++	private static final String DISTRIBUTION_URL = "distributionUrl=";
++
++	private final String repositoryUrl;
++
++	MavenWrapperRepositoryContributor(String repositoryUrl) {
++		this.repositoryUrl = (repositoryUrl != null) ? StringUtils.trimTrailingCharacter(repositoryUrl, '/') : "";
++	}
++
++	@Override
++	public void contribute(Path projectRoot) throws IOException {
++		if (!StringUtils.hasText(this.repositoryUrl)) {
++			return;
++		}
++		Path properties = projectRoot.resolve(WRAPPER_PROPERTIES);
++		if (!Files.exists(properties)) {
++			return;
++		}
++		List<String> lines = Files.readAllLines(properties, StandardCharsets.ISO_8859_1)
++			.stream()
++			.map(this::rewrite)
++			.toList();
++		Files.write(properties, lines, StandardCharsets.ISO_8859_1);
++	}
++
++	private String rewrite(String line) {
++		if (line.startsWith(DISTRIBUTION_URL)) {
++			return line.replace(CENTRAL, this.repositoryUrl);
++		}
++		return line;
++	}
++
++	@Override
++	public int getOrder() {
++		return Ordered.LOWEST_PRECEDENCE;
++	}
++
++}
+diff --git a/start-site/src/main/java/io/spring/start/site/extension/internal/package-info.java b/start-site/src/main/java/io/spring/start/site/extension/internal/package-info.java
+new file mode 100644
+index 00000000..3b549d37
+--- /dev/null
++++ b/start-site/src/main/java/io/spring/start/site/extension/internal/package-info.java
+@@ -0,0 +1,20 @@
++/*
++ * Copyright 2012 - present the original author or authors.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      https://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++/**
++ * Extensions for the internal, offline-network instance of this site.
++ */
++package io.spring.start.site.extension.internal;
+diff --git a/start-site/src/main/resources/META-INF/spring.factories b/start-site/src/main/resources/META-INF/spring.factories
+index 3c57bb74..05879ce1 100644
+--- a/start-site/src/main/resources/META-INF/spring.factories
++++ b/start-site/src/main/resources/META-INF/spring.factories
+@@ -63,4 +63,5 @@ io.spring.start.site.extension.dependency.testcontainers.TestcontainersProjectGe
+ io.spring.start.site.extension.dependency.vaadin.VaadinProjectGenerationConfiguration,\
+ io.spring.start.site.extension.dependency.zipkin.ZipkinProjectGenerationConfiguration,\
+ io.spring.start.site.extension.description.DescriptionProjectGenerationConfiguration,\
++io.spring.start.site.extension.internal.InternalMavenWrapperProjectGenerationConfiguration,\
+ io.spring.start.site.extension.properties.ApplicationPropertiesProjectGenerationConfiguration
+-- 
+2.43.0
+

@@ -1,0 +1,248 @@
+# The internal site's menu. Mounted into the pod as application.yml under
+# /config/ (SPRING_CONFIG_ADDITIONAL_LOCATION), so it overrides the upstream
+# classpath application.yml. Spring Boot replaces a list wholesale when a
+# higher-priority source defines it, so every list here REPLACES upstream's:
+# anything not listed is not offered.
+#
+# Rule: only list what the Nexus holds. A Boot version goes in after its hop is
+# loaded and verified there (scripts/verify-generated-projects.ps1); a starter
+# goes in after a generated project using it builds against Nexus alone.
+#
+# Dependency entries are copied verbatim from upstream start-site's
+# application.yml at the commit pinned in upstream.lock (Apache 2.0). When
+# bumping that commit, re-copy them so compatibility ranges and BOM mappings
+# stay current. Upstream only supports Boot 4.x (its update strategy filters
+# out anything below 4.0.0 and its ranges start at 4.0.0), so 3.x is not
+# offered here.
+#
+# Editing this file: helm upgrade rolls the pod (checksum annotation) -- no
+# image rebuild needed.
+initializr:
+  env:
+    spring-boot-metadata-url: ''
+  bootVersions:
+  - name: 4.1.1
+    id: 4.1.1
+    default: true
+  - name: 4.0.8
+    id: 4.0.8
+    default: false
+  types:
+  - name: Maven
+    id: maven-project
+    description: Generate a Maven based project archive.
+    tags:
+      build: maven
+      format: project
+    default: true
+    action: /starter.zip
+  languages:
+  - name: Java
+    id: java
+    default: true
+  javaVersions:
+  - id: 25
+    default: false
+  - id: 21
+    default: true
+  - id: 17
+    default: false
+  dependencies:
+  - name: Developer Tools
+    content:
+    - name: Spring Boot DevTools
+      id: devtools
+      groupId: org.springframework.boot
+      artifactId: spring-boot-devtools
+      scope: runtime
+      description: Provides fast application restarts, LiveReload, and configurations for enhanced development
+        experience.
+      starter: false
+      links:
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/using/devtools.html
+    - name: Lombok
+      id: lombok
+      groupId: org.projectlombok
+      artifactId: lombok
+      scope: annotationProcessor
+      description: Java annotation library which helps to reduce boilerplate code.
+      starter: false
+    - name: Spring Configuration Processor
+      id: configuration-processor
+      groupId: org.springframework.boot
+      artifactId: spring-boot-configuration-processor
+      scope: annotationProcessor
+      description: Generate metadata for developers to offer contextual help and "code completion" when
+        working with custom configuration keys (ex.application.properties/.yml files).
+      starter: false
+      links:
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/specification/configuration-metadata/annotation-processor.html
+  - name: Web
+    content:
+    - name: Spring Web
+      id: web
+      description: Build web, including RESTful, applications using Spring MVC. Uses Apache Tomcat as
+        the default embedded container.
+      facets:
+      - web
+      - json
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-webmvc
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/rest-service/
+        description: Building a RESTful Web Service
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/web/servlet.html
+      - rel: guide
+        href: https://spring.io/guides/gs/serving-web-content/
+        description: Serving Web Content with Spring MVC
+      - rel: guide
+        href: https://spring.io/guides/tutorials/rest/
+        description: Building REST services with Spring
+  - name: Security
+    content:
+    - name: Spring Security
+      id: security
+      description: Highly customizable authentication and access-control framework for Spring applications.
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/securing-web/
+        description: Securing a Web Application
+      - rel: guide
+        href: https://spring.io/guides/tutorials/spring-boot-oauth2/
+        description: Spring Boot and OAuth2
+      - rel: guide
+        href: https://spring.io/guides/gs/authenticating-ldap/
+        description: Authenticating a User with LDAP
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/web/spring-security.html
+    - name: OAuth2 Resource Server
+      id: oauth2-resource-server
+      description: Spring Boot integration for Spring Security's OAuth2 resource server features.
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-security-oauth2-resource-server
+      links:
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/web/spring-security.html#web.security.oauth2.server
+  - name: SQL
+    content:
+    - name: Spring Data JPA
+      id: data-jpa
+      description: Persist data in SQL stores with Java Persistence API using Spring Data and Hibernate.
+      facets:
+      - jpa
+      aliases:
+      - jpa
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/accessing-data-jpa/
+        description: Accessing Data with JPA
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/data/sql.html#data.sql.jpa-and-spring-data
+    - name: Spring Data JDBC
+      id: data-jdbc
+      description: Persist data in SQL stores with plain JDBC using Spring Data.
+      links:
+      - rel: guide
+        href: https://github.com/spring-projects/spring-data-examples/tree/main/jdbc/basics
+        description: Using Spring Data JDBC
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/data/sql.html#data.sql.jdbc
+    - name: Flyway Migration
+      id: flyway
+      description: Version control for your database so you can migrate from any version (incl. an empty
+        database) to the latest version of the schema.
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-flyway
+      links:
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/how-to/data-initialization.html#howto.data-initialization.migration-tool.flyway
+    - name: H2 Database
+      id: h2
+      description: Provides a fast in-memory database that supports JDBC API and R2DBC access, with a
+        small (2mb) footprint. Supports embedded and server modes as well as a browser based console application.
+      groupId: com.h2database
+      artifactId: h2
+      scope: runtime
+      starter: false
+    - name: PostgreSQL Driver
+      id: postgresql
+      description: A JDBC and R2DBC driver that allows Java programs to connect to a PostgreSQL database
+        using standard, database independent Java code.
+      groupId: org.postgresql
+      artifactId: postgresql
+      scope: runtime
+      starter: false
+  - name: NoSQL
+    content:
+    - name: Spring Data MongoDB
+      id: data-mongodb
+      description: Spring Data support for MongoDB.
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/accessing-data-mongodb/
+        description: Accessing Data with MongoDB
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/data/nosql.html#data.nosql.mongodb
+  - name: Messaging
+    content:
+    - name: Spring for Apache ActiveMQ Artemis
+      id: artemis
+      description: Spring JMS support with Apache ActiveMQ Artemis.
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/messaging-jms/
+        description: Messaging with JMS
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/messaging/jms.html#messaging.jms.artemis
+  - name: I/O
+    content:
+    - name: Validation
+      id: validation
+      description: Bean Validation with Hibernate validator.
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/validating-form-input/
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/io/validation.html
+  - name: Ops
+    content:
+    - name: Spring Boot Actuator
+      id: actuator
+      description: Supports built in (or custom) endpoints that let you monitor and manage your application
+        - such as application health, metrics, sessions, etc.
+      links:
+      - rel: guide
+        href: https://spring.io/guides/gs/actuator-service/
+        description: Building a RESTful Web Service with Spring Boot Actuator
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/actuator/index.html
+  - name: Observability
+    content:
+    - name: Prometheus
+      id: prometheus
+      groupId: io.micrometer
+      artifactId: micrometer-registry-prometheus
+      scope: runtime
+      starter: false
+      description: Expose Micrometer metrics in Prometheus format, an in-memory dimensional time series
+        database with a simple built-in UI, a custom query language, and math operations.
+      links:
+      - rel: reference
+        href: https://docs.spring.io/spring-boot/{bootVersion}/reference/actuator/metrics.html#actuator.metrics.export.prometheus
+  - name: Testing
+    content:
+    - name: Testcontainers
+      id: testcontainers
+      description: Provide lightweight, throwaway instances of common databases, Selenium web browsers,
+        or anything else that can run in a Docker container.
+      groupId: org.testcontainers
+      artifactId: testcontainers-junit-jupiter
+      scope: test
+      starter: false
+      links:
+      - rel: reference
+        href: https://java.testcontainers.org/

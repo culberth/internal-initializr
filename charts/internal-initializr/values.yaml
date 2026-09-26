@@ -1,0 +1,35 @@
+image:
+  repository: internal-initializr
+  tag: ""            # defaults to .Chart.AppVersion
+  # There is no registry: the image is put on the nodes with `kind load`, so never pull.
+  pullPolicy: IfNotPresent
+
+# Stateless: no sessions, no storage. More replicas are safe, one is plenty for a team.
+replicaCount: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  # Needs a hosts-file entry on this KinD setup:
+  #     127.0.0.1 initializr.claude.local
+  host: initializr.claude.local
+
+# Where generated projects' Maven wrapper downloads Maven from. The wrapper template points at
+# https://repo.maven.apache.org/maven2; the patch in patches/start.spring.io swaps that prefix for
+# this URL and keeps the path (org/apache/maven/apache-maven/<version>/...).
+# Projects are built on the host, not in the cluster, so this is the host's view of Nexus.
+# CONFIRM the repository name against your Nexus: maven-public is only the Nexus default.
+# Empty leaves the wrapper pointing at Maven Central.
+nexus:
+  mavenRepositoryUrl: "http://localhost:8081/repository/maven-public"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Extra environment for the container, verbatim.
+extraEnv: []

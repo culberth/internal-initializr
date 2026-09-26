@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-menu
+  labels:
+    app: {{ .Release.Name }}
+data:
+  # Mounted at /config/application.yml. It overrides upstream's classpath application.yml, and any
+  # list it defines (bootVersions, dependencies, types, ...) replaces upstream's list wholesale.
+  application.yml: |
+{{ .Files.Get "files/initializr-menu.yml" | indent 4 }}

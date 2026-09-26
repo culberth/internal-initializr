@@ -1,0 +1,7 @@
+apiVersion: v2
+name: internal-initializr
+description: The start.spring.io site, forked, with a menu limited to what the local Nexus holds
+type: application
+version: 0.1.0
+# The image tag scripts/build-image.ps1 produces by default.
+appVersion: "0.1.0"

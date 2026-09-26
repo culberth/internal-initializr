@@ -1,0 +1,4 @@
+# The image is built from one prepared jar. Everything else, upstream/ above all, stays out of the
+# build context.
+*
+!build/start-site-exec.jar
