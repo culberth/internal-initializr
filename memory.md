@@ -44,3 +44,10 @@
   redirected.** `docker build` writes progress to stderr, so running `build-image.ps1 *>&1 | Tee-Object`
   fails at the image step. Run it without redirecting. The script's own Deployment check had the same
   bug (`kubectl ... *> $null` on a missing namespace); it now uses `--ignore-not-found`.
+- **Scripts that rewrite the hosts file can empty it** (2026-09-27). An elevated dedupe script with a
+  fixed `hosts.bak` name apparently ran twice at once: one run truncated `hosts` while the other copied
+  the empty file over the backup and wrote it back, leaving both at 0 bytes and no `*.claude.local` name
+  resolving. It was rebuilt from lines read earlier; the top ~22 lines (thought to be Microsoft's sample
+  comments) were never seen. Elevated commands here have run more than once before (one `Add-Content`
+  added its line 4 times). Any admin-run edit of a system file: read the file in full first, allow one
+  instance (named mutex), refuse empty writes, use a timestamped backup, and test on a scratch copy.
