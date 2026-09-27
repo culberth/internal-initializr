@@ -22,7 +22,7 @@ This root repo is ours. Upstream code is never committed here.
   upstream's list wholesale.
 - `Dockerfile` — runtime-only image around `build/start-site-exec.jar`.
 - `scripts/` — `build-image.ps1` (upstream → jar → image → `kind load`), `deploy.ps1` (helm),
-  `verify-generated-projects.ps1` (menu ↔ Nexus check).
+  `verify-generated-projects.ps1` (menu ↔ Nexus check), `new-tls-secret.ps1` (HTTPS certificate).
 
 ## Commands (PowerShell, from the repo root)
 
@@ -30,6 +30,9 @@ This root repo is ours. Upstream code is never committed here.
   `-SkipUpstreamBuild` to re-package the existing jar)
 - Install or upgrade: `./scripts/deploy.ps1` (`-NexusUrl ...` to override the wrapper repo)
 - Verify: `./scripts/verify-generated-projects.ps1` (`-PerDependency`, `-BootVersion 4.0.8`)
+- HTTPS: `./scripts/new-tls-secret.ps1` (mkcert cert → secret), then `./scripts/deploy.ps1`, which
+  enables ingress TLS whenever the secret exists. `mkcert -install` is the user's to run: it
+  changes the Windows trust store.
 - Menu-only change: edit the menu file, then `./scripts/deploy.ps1`. No rebuild.
 - Hosts file: `127.0.0.1 initializr.claude.local`
 

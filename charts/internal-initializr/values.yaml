@@ -13,6 +13,12 @@ ingress:
   # Needs a hosts-file entry on this KinD setup:
   #     127.0.0.1 initializr.claude.local
   host: initializr.claude.local
+  tls:
+    # A kubernetes.io/tls Secret in the release namespace for `host`. Empty serves plain HTTP.
+    # Locally, scripts/new-tls-secret.ps1 makes one with mkcert and deploy.ps1 then sets this;
+    # on the offline network, point it at a secret holding a certificate from that network's CA.
+    # When set, ingress-nginx redirects HTTP to HTTPS.
+    secretName: ""
 
 # Where generated projects' Maven wrapper downloads Maven from. The wrapper template points at
 # https://repo.maven.apache.org/maven2; the patch in patches/start.spring.io swaps that prefix for

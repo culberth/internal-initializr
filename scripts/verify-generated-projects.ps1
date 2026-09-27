@@ -23,7 +23,7 @@
     ./scripts/verify-generated-projects.ps1 -BootVersion 4.0.8 -PerDependency
 #>
 param(
-    [string]$SiteUrl = "http://initializr.claude.local",
+    [string]$SiteUrl = "https://initializr.claude.local",
     [string]$NexusUrl = "http://localhost:8081/repository/maven-public",
     [string]$BootVersion = "",
     [string]$JavaVersion = "21",

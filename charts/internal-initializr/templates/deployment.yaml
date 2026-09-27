@@ -36,6 +36,11 @@ spec:
             # internal.maven-wrapper.repository-url.
             - name: INTERNAL_MAVEN_WRAPPER_REPOSITORY_URL
               value: {{ .Values.nexus.mavenRepositoryUrl | quote }}
+            # Behind ingress-nginx: take scheme and host from X-Forwarded-*, so the absolute links
+            # in the metadata (used by IDEs and the spring CLI) say https when TLS ends at the ingress.
+            # Tomcat trusts these headers only from private addresses, which the ingress pod has.
+            - name: SERVER_FORWARD_HEADERS_STRATEGY
+              value: native
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

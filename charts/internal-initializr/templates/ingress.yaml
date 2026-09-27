@@ -7,6 +7,12 @@ metadata:
     app: {{ .Release.Name }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
+  {{- with .Values.ingress.tls.secretName }}
+  tls:
+    - hosts:
+        - {{ $.Values.ingress.host }}
+      secretName: {{ . }}
+  {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:

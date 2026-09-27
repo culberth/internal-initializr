@@ -1,9 +1,10 @@
+{{- $url := printf "%s://%s" (ternary "https" "http" (not (empty .Values.ingress.tls.secretName))) .Values.ingress.host -}}
 internal-initializr is starting in namespace {{ .Release.Namespace }}.
 
-Browser:  http://{{ .Values.ingress.host }}
+Browser:  {{ $url }}
           (hosts file: 127.0.0.1 {{ .Values.ingress.host }})
-CLI:      spring init --target http://{{ .Values.ingress.host }} --dependencies=web demo
-IDEs:     set the Spring Initializr server URL to http://{{ .Values.ingress.host }}
+CLI:      spring init --target {{ $url }} --dependencies=web demo
+IDEs:     set the Spring Initializr server URL to {{ $url }}
 
 Generated wrappers download Maven from: {{ .Values.nexus.mavenRepositoryUrl | default "Maven Central (nexus.mavenRepositoryUrl is empty)" }}
 

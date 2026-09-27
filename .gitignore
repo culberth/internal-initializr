@@ -4,6 +4,9 @@ upstream/
 # Build output: the jar handed to docker build, and verify-generated-projects.ps1's scratch
 build/
 
+# TLS key and certificate from scripts/new-tls-secret.ps1. Never commit a private key.
+.tls/
+
 # Claude Code. The memory file is committed on purpose; only machine-local settings are ignored.
 .claude/settings.local.json
 

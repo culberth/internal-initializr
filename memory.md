@@ -11,6 +11,13 @@
 - 2026-09-26: Deployed (helm revision 1) at http://initializr.claude.local; hosts entry added.
   `verify-generated-projects.ps1` passed for Boot 4.1.1 and 4.0.8 (all 17 starters, one combined
   project each; wrapper and build both through Nexus). Not yet run: `-PerDependency`, `-RunTests`.
+- 2026-09-27: Optional HTTPS added (Chrome showed "Not Secure" on plain HTTP): `ingress.tls.secretName`,
+  `new-tls-secret.ps1` (mkcert), `deploy.ps1` enables TLS when secret `internal-initializr-tls`
+  exists, and `SERVER_FORWARD_HEADERS_STRATEGY=native` so metadata links say https behind the
+  ingress (checked via port-forward with X-Forwarded-Proto). KinD already maps host 443.
+- 2026-09-27: HTTPS live at https://initializr.claude.local. User installed mkcert 1.4.4 and ran
+  `mkcert -install` (CA in the Windows store and in JAVA_HOME's cacerts). Cert expires 2028-12-27.
+  HTTP answers 308 to HTTPS; `verify-generated-projects.ps1` (now defaulting to https) passed.
 
 ## Verified facts (from reading upstream source at the pinned commits)
 

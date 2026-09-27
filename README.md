@@ -13,6 +13,8 @@ project that downloads builds against Nexus alone, Maven wrapper included.
 - Internet access for the first build: git clones from GitHub, and start-client's build downloads
   Node, Yarn and npm packages.
 - Hosts file entry: `127.0.0.1 initializr.claude.local`
+- Optional, for HTTPS: [mkcert](https://github.com/FiloSottile/mkcert) with its CA trusted
+  (`winget install FiloSottile.mkcert`, then `mkcert -install`).
 
 ## Build, deploy, verify
 
@@ -21,6 +23,11 @@ project that downloads builds against Nexus alone, Maven wrapper included.
 ./scripts/deploy.ps1                       # helm upgrade --install into namespace internal-initializr
 ./scripts/verify-generated-projects.ps1    # generates projects and builds them through Nexus only
 ```
+
+HTTPS (optional): `./scripts/new-tls-secret.ps1`, then `./scripts/deploy.ps1`. The deploy script
+turns TLS on whenever the secret `internal-initializr-tls` exists; without it the site is plain
+HTTP, which Chrome labels "Not Secure". On the offline network, create that secret from a
+certificate issued by the network's own CA instead of mkcert.
 
 Before the first deploy, confirm the Nexus repository URL in
 `charts/internal-initializr/values.yaml` (`nexus.mavenRepositoryUrl`); `maven-public` is only the
@@ -33,6 +40,7 @@ Nexus default name.
 | Boot versions, starters, Java versions | `charts/internal-initializr/files/initializr-menu.yml` | `deploy.ps1`, `verify-generated-projects.ps1` |
 | Nexus URL for generated wrappers | `values.yaml` or `deploy.ps1 -NexusUrl` | `deploy.ps1` |
 | Site code | commit on branch `internal` in `upstream/start.spring.io`, `git format-patch` into `patches/start.spring.io/` | `build-image.ps1` |
+| HTTPS certificate | `new-tls-secret.ps1`, or any `kubernetes.io/tls` secret (`ingress.tls.secretName`) | `deploy.ps1` |
 | Upstream version | both commits in `upstream.lock`; re-copy menu entries | `build-image.ps1`, `deploy.ps1`, verify |
 
 ## What is changed from upstream
